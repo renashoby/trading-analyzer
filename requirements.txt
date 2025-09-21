@@ -1,0 +1,14 @@
+flask
+flask-cors
+pandas
+numpy
+scikit-learn
+joblib
+requests
+textblob
+vaderSentiment
+torch
+transformers
+alpha_vantage
+beautifulsoup4
+yfinance

@@ -1292,7 +1292,7 @@ def main():
     print("\n📊 Loading and preparing data...")
     
     try:
-        df = pd.read_csv("userbehaviour/trade_info.csv")
+        df = pd.read_csv("trade_info.csv")
         print(f"✅ Loaded {len(df)} trades")
     except FileNotFoundError:
         print("❌ Error: 'trade_info.csv' not found. Please place it in the same directory.")

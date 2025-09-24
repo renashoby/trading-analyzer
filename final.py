@@ -1795,7 +1795,7 @@ def main():
     
     # Try to load data, create sample if not found
     try:
-        df = pd.read_csv("userbehaviour/trade_info.csv")
+        df = pd.read_csv("trade_info.csv")
         print(f"Loaded {len(df)} trades from CSV")
     except FileNotFoundError:
         print("CSV file not found. Creating sample data for demonstration...")

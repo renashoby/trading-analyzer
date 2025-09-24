@@ -6,6 +6,7 @@ from datetime import datetime
 import json
 import traceback
 import logging
+import os
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -313,6 +314,29 @@ def get_popular_stocks():
         logger.error(f"Error in get_popular_stocks: {e}")
         return jsonify({'error': str(e)}), 500
 
+# if __name__ == '__main__':
+#     print("=" * 60)
+#     print("TRADING ANALYSIS API SERVER")
+#     print("=" * 60)
+#     print(f"ML Features Available: {ML_AVAILABLE}")
+#     print(f"Data Loaded: {df is not None}")
+#     if df is not None:
+#         print(f"Total Trades in Database: {len(df)}")
+#         print(f"Unique Users: {len(df['user_id'].unique())}")
+#     print("=" * 60)
+#     print("Starting server on http://localhost:5000")
+#     print("API Endpoints:")
+#     print("  GET  /api/health")
+#     print("  GET  /api/users") 
+#     print("  GET  /api/analyze/trader/{user_id}")
+#     print("  GET  /api/analyze/comprehensive/{user_id}")
+#     print("  GET  /api/stocks/popular")
+#     print("=" * 60)
+    
+#     app.run(debug=True, host='0.0.0.0', port=5001)
+
+
+
 if __name__ == '__main__':
     print("=" * 60)
     print("TRADING ANALYSIS API SERVER")
@@ -323,7 +347,11 @@ if __name__ == '__main__':
         print(f"Total Trades in Database: {len(df)}")
         print(f"Unique Users: {len(df['user_id'].unique())}")
     print("=" * 60)
-    print("Starting server on http://localhost:5000")
+    
+    # Get port from environment variable or default to 5000 for local development
+    port = int(os.environ.get('PORT', 5000))
+    print(f"Starting server on port {port}")
+    
     print("API Endpoints:")
     print("  GET  /api/health")
     print("  GET  /api/users") 
@@ -332,4 +360,5 @@ if __name__ == '__main__':
     print("  GET  /api/stocks/popular")
     print("=" * 60)
     
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    # Use PORT environment variable for Render deployment
+    app.run(debug=False, host='0.0.0.0', port=port)

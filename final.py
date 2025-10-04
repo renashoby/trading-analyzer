@@ -1360,6 +1360,512 @@
 
 # Fixed version addressing the main syntax and structural issues
 
+# import pandas as pd
+# import numpy as np
+# import requests
+# import json
+# import time
+# from datetime import datetime, timedelta
+# import re
+# from sklearn.ensemble import RandomForestClassifier, GradientBoostingRegressor
+# from sklearn.preprocessing import StandardScaler
+# from sklearn.model_selection import train_test_split
+# from sklearn.metrics import classification_report, mean_squared_error, r2_score
+# from sklearn.linear_model import LinearRegression
+# import joblib
+
+# # Sentiment Analysis Libraries
+# try:
+#     from textblob import TextBlob
+#     from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+#     import torch
+#     from transformers import BertTokenizer, BertForSequenceClassification
+#     ADVANCED_SENTIMENT = True
+# except ImportError:
+#     print("Warning: Advanced sentiment analysis libraries not available")
+#     ADVANCED_SENTIMENT = False
+
+# try:
+#     from bs4 import BeautifulSoup
+#     BS4_AVAILABLE = True
+# except ImportError:
+#     print("Warning: BeautifulSoup not available for web scraping")
+#     BS4_AVAILABLE = False
+
+# # Configuration and API Handlers
+# API_KEYS = {
+#     "ALPHA_VANTAGE_KEY": "T25ZB3N6FSVIA9KN",
+#     "NEWS_API_KEY": "abe3a66ade2b4387963dcb1cdab51a2e",
+#     "FINNHUB_KEY": "cjhqj9pr01qjqjqjqjqjqjqjqjqjqjqjqj",
+# }
+
+# class NewsAPIProvider:
+#     """News API provider for reliable news fetching"""
+#     def __init__(self, api_key):
+#         self.api_key = api_key
+#         self.base_url = "https://newsapi.org/v2/everything"
+    
+#     def get_news_headlines(self, symbol, limit=10):
+#         """Fetch news headlines using News API"""
+#         params = {
+#             "q": f"{symbol} stock OR {symbol} shares OR {symbol} earnings OR {symbol} financials",
+#             "apiKey": self.api_key,
+#             "language": "en",
+#             "pageSize": limit,
+#             "sortBy": "relevancy",
+#             "from": (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
+#         }
+#         try:
+#             response = requests.get(self.base_url, params=params, timeout=10)
+#             response.raise_for_status()
+#             data = response.json()
+            
+#             if data.get('status') == 'ok' and data.get('articles'):
+#                 headlines = [article.get('title', '') for article in data['articles'][:limit]]
+#                 print(f"Successfully fetched {len(headlines)} news headlines for {symbol}")
+#                 return headlines
+#             else:
+#                 print(f"No news found for {symbol}")
+#                 return []
+#         except requests.exceptions.RequestException as e:
+#             print(f"News API request failed for {symbol}: {e}")
+#             return []
+
+# class YahooFinanceProvider:
+#     """Yahoo Finance provider for stock data and fundamentals"""
+#     def __init__(self):
+#         self.base_url = "https://query1.finance.yahoo.com/v8/finance/chart"
+    
+#     def get_stock_price_data(self, symbol, days=100):
+#         """Fetch stock price data from Yahoo Finance"""
+#         try:
+#             # Convert symbol to Yahoo format if needed
+#             yahoo_symbol = f"{symbol}.NS" if not symbol.endswith('.NS') else symbol
+            
+#             end_time = int(datetime.now().timestamp())
+#             start_time = int((datetime.now() - timedelta(days=days)).timestamp())
+            
+#             url = f"{self.base_url}/{yahoo_symbol}"
+#             params = {
+#                 "period1": start_time,
+#                 "period2": end_time,
+#                 "interval": "1d",
+#                 "includePrePost": "true",
+#                 "events": "div%2Csplit"
+#             }
+            
+#             response = requests.get(url, params=params, timeout=15)
+#             response.raise_for_status()
+#             data = response.json()
+            
+#             if 'chart' in data and 'result' in data['chart'] and data['chart']['result']:
+#                 result = data['chart']['result'][0]
+#                 timestamps = result['timestamp']
+#                 quotes = result['indicators']['quote'][0]
+                
+#                 df = pd.DataFrame({
+#                     'open': quotes['open'],
+#                     'high': quotes['high'],
+#                     'low': quotes['low'],
+#                     'close': quotes['close'],
+#                     'volume': quotes['volume']
+#                 }, index=pd.to_datetime(timestamps, unit='s'))
+                
+#                 df = df.dropna()
+#                 print(f"Fetched {len(df)} days of price data for {symbol}")
+#                 return df
+#             else:
+#                 print(f"No price data available for {symbol}")
+#                 return None
+                
+#         except Exception as e:
+#             print(f"Error fetching price data for {symbol}: {e}")
+#             return None
+    
+#     def get_company_fundamentals(self, symbol):
+#         """Fetch basic company fundamentals from Yahoo Finance"""
+#         try:
+#             yahoo_symbol = f"{symbol}.NS" if not symbol.endswith('.NS') else symbol
+            
+#             # Try to import yfinance if available
+#             try:
+#                 import yfinance as yf
+#                 ticker = yf.Ticker(yahoo_symbol)
+#                 info = ticker.info
+                
+#                 fundamentals = {
+#                     'Symbol': symbol,
+#                     'Name': info.get('longName', symbol),
+#                     'PERatio': str(info.get('trailingPE', 0)),
+#                     'PriceToBookRatio': str(info.get('priceToBook', 0)),
+#                     'ReturnOnEquity': str(info.get('returnOnEquity', 0)),
+#                     'DebtToEquityRatio': str(info.get('debtToEquity', 0)),
+#                     'CurrentRatio': str(info.get('currentRatio', 0)),
+#                     'GrossProfitMargin': str(info.get('grossMargins', 0)),
+#                     'OperatingMargin': str(info.get('operatingMargins', 0)),
+#                     'ProfitMargin': str(info.get('profitMargins', 0)),
+#                     'QuarterlyRevenueGrowthYOY': str(info.get('revenueGrowth', 0)),
+#                     'QuarterlyEarningsGrowthYOY': str(info.get('earningsGrowth', 0)),
+#                     'MarketCapitalization': str(info.get('marketCap', 0)),
+#                     'DividendYield': str(info.get('dividendYield', 0))
+#                 }
+                
+#                 print(f"Fetched fundamental data for {symbol}")
+#                 return fundamentals
+                
+#             except ImportError:
+#                 print(f"yfinance not available, using basic data for {symbol}")
+#                 return self._get_basic_fundamentals(symbol)
+                
+#         except Exception as e:
+#             print(f"Error fetching fundamentals for {symbol}: {e}")
+#             return None
+    
+#     def _get_basic_fundamentals(self, symbol):
+#         """Get basic fundamental data using web scraping"""
+#         # This is a fallback method - in practice, you'd want to use a proper API
+#         return None
+
+# class TechnicalIndicators:
+#     """Calculate technical indicators for stock analysis"""
+    
+#     @staticmethod
+#     def sma(data, window):
+#         """Simple Moving Average"""
+#         return data.rolling(window=window).mean()
+    
+#     @staticmethod
+#     def ema(data, window):
+#         """Exponential Moving Average"""
+#         return data.ewm(span=window).mean()
+    
+#     @staticmethod
+#     def rsi(data, window=14):
+#         """Relative Strength Index"""
+#         delta = data.diff()
+#         gain = (delta.where(delta > 0, 0)).rolling(window=window).mean()
+#         loss = (-delta.where(delta < 0, 0)).rolling(window=window).mean()
+#         rs = gain / loss
+#         return 100 - (100 / (1 + rs))
+    
+#     @staticmethod
+#     def macd(data, fast=12, slow=26, signal=9):
+#         """MACD (Moving Average Convergence Divergence)"""
+#         ema_fast = data.ewm(span=fast).mean()
+#         ema_slow = data.ewm(span=slow).mean()
+#         macd_line = ema_fast - ema_slow
+#         signal_line = macd_line.ewm(span=signal).mean()
+#         histogram = macd_line - signal_line
+#         return macd_line, signal_line, histogram
+    
+#     @staticmethod
+#     def bollinger_bands(data, window=20, num_std=2):
+#         """Bollinger Bands"""
+#         sma = data.rolling(window=window).mean()
+#         std = data.rolling(window=window).std()
+#         upper_band = sma + (std * num_std)
+#         lower_band = sma - (std * num_std)
+#         return upper_band, sma, lower_band
+    
+#     @staticmethod
+#     def stochastic(high, low, close, k_window=14, d_window=3):
+#         """Stochastic Oscillator"""
+#         lowest_low = low.rolling(window=k_window).min()
+#         highest_high = high.rolling(window=k_window).max()
+#         k_percent = 100 * ((close - lowest_low) / (highest_high - lowest_low))
+#         d_percent = k_percent.rolling(window=d_window).mean()
+#         return k_percent, d_percent
+
+# class EnhancedTradingAnalyzer:
+#     """Main trading analyzer class"""
+    
+#     def __init__(self):
+#         self.trader_classifier = None
+#         self.fundamental_classifier = None
+#         self.scaler = StandardScaler()
+#         self.fundamental_scaler = StandardScaler()
+        
+#         # Initialize sentiment analyzer if available
+#         if ADVANCED_SENTIMENT:
+#             self.sentiment_analyzer = SentimentIntensityAnalyzer()
+#         else:
+#             self.sentiment_analyzer = None
+        
+#         # Initialize API providers
+#         self.news_provider = NewsAPIProvider(API_KEYS["NEWS_API_KEY"])
+#         self.yahoo_provider = YahooFinanceProvider()
+
+#     def create_sample_data(self):
+#         """Create sample trading data for testing"""
+#         np.random.seed(42)
+        
+#         users = [f'user_{i}' for i in range(1, 11)]
+#         symbols = ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA', 'META', 'NVDA']
+        
+#         data = []
+#         for _ in range(500):
+#             user = np.random.choice(users)
+#             symbol = np.random.choice(symbols)
+            
+#             buy_time = datetime.now() - timedelta(days=np.random.randint(1, 365))
+#             holding_hours = np.random.randint(1, 168)  # 1 hour to 1 week
+#             sell_time = buy_time + timedelta(hours=holding_hours)
+            
+#             profit_pct = np.random.normal(2, 15)  # Mean 2%, std 15%
+#             total_value = np.random.uniform(1000, 50000)
+            
+#             data.append({
+#                 'user_id': user,
+#                 'symbol': symbol,
+#                 'buy_time': buy_time,
+#                 'sell_time': sell_time,
+#                 'holding_time_hrs': holding_hours,
+#                 'profit_pct': profit_pct,
+#                 'total_buy_value': total_value
+#             })
+        
+#         return pd.DataFrame(data)
+
+#     def prepare_trader_features(self, df):
+#         """Enhanced feature engineering for trader classification"""
+#         features = []
+        
+#         for user_id in df['user_id'].unique():
+#             user_data = df[df['user_id'] == user_id]
+            
+#             if user_data.empty:
+#                 continue
+
+#             # Basic features
+#             num_trades = len(user_data)
+#             avg_profit = user_data['profit_pct'].mean()
+#             std_profit = user_data['profit_pct'].std() if len(user_data) > 1 else 0
+#             win_rate = (user_data['profit_pct'] > 0).mean()
+            
+#             # Advanced features
+#             avg_holding_time = user_data['holding_time_hrs'].mean()
+#             max_loss = user_data['profit_pct'].min()
+#             max_gain = user_data['profit_pct'].max()
+#             profit_consistency = (std_profit / abs(avg_profit)) if (avg_profit != 0) else 0
+            
+#             # Risk metrics
+#             sharpe_ratio = avg_profit / std_profit if std_profit != 0 else 0
+#             days_active = ((user_data['buy_time'].max() - user_data['buy_time'].min()).days + 1) if len(user_data) > 1 else 1
+#             trade_frequency = num_trades / max(days_active, 1)
+            
+#             # Diversification
+#             diversity_score = len(user_data['symbol'].unique()) / num_trades if num_trades > 0 else 0
+            
+#             # Trading pattern features
+#             weekend_trades = sum(user_data['buy_time'].dt.dayofweek >= 5) / num_trades if num_trades > 0 else 0
+#             morning_trades = sum(user_data['buy_time'].dt.hour < 12) / num_trades if num_trades > 0 else 0
+            
+#             # Trade size patterns
+#             avg_trade_size = user_data['total_buy_value'].mean() if 'total_buy_value' in user_data.columns else 1000
+#             trade_size_consistency = user_data['total_buy_value'].std() / avg_trade_size if 'total_buy_value' in user_data.columns and avg_trade_size > 0 else 0
+            
+#             features.append({
+#                 'user_id': user_id,
+#                 'num_trades': num_trades,
+#                 'avg_profit': avg_profit,
+#                 'std_profit': std_profit,
+#                 'win_rate': win_rate,
+#                 'avg_holding_time': avg_holding_time,
+#                 'max_loss': max_loss,
+#                 'max_gain': max_gain,
+#                 'profit_consistency': profit_consistency,
+#                 'sharpe_ratio': sharpe_ratio,
+#                 'trade_frequency': trade_frequency,
+#                 'diversity_score': diversity_score,
+#                 'weekend_trades': weekend_trades,
+#                 'morning_trades': morning_trades,
+#                 'avg_trade_size': avg_trade_size,
+#                 'trade_size_consistency': trade_size_consistency
+#             })
+            
+#         return pd.DataFrame(features)
+
+#     def train_trader_classifier(self, df):
+#         """Train Random Forest model for trader classification"""
+#         features_df = self.prepare_trader_features(df)
+        
+#         def enhanced_label_trader(row):
+#             if (row['trade_frequency'] > 0.5 and row['std_profit'] > 5 and
+#                 row['avg_profit'] > 1 and abs(row['sharpe_ratio']) > 0.3):
+#                 return 'Aggressive'
+#             elif (row['win_rate'] > 0.6 and row['profit_consistency'] < 3 and
+#                   row['avg_profit'] > 0 and row['trade_frequency'] < 0.3):
+#                 return 'Conservative'
+#             else:
+#                 return 'Balanced'
+        
+#         features_df['trader_type'] = features_df.apply(enhanced_label_trader, axis=1)
+        
+#         feature_columns = ['num_trades', 'avg_profit', 'std_profit', 'win_rate',
+#                            'avg_holding_time', 'max_loss', 'max_gain', 'profit_consistency',
+#                            'sharpe_ratio', 'trade_frequency', 'diversity_score',
+#                            'weekend_trades', 'morning_trades', 'avg_trade_size', 'trade_size_consistency']
+        
+#         X = features_df[feature_columns].fillna(0).replace([np.inf, -np.inf], 0)
+#         y = features_df['trader_type']
+        
+#         if X.empty:
+#             print("No features to train on. Check input data.")
+#             return features_df
+        
+#         self.scaler.fit(X)
+#         X_scaled = self.scaler.transform(X)
+        
+#         self.trader_classifier = RandomForestClassifier(n_estimators=100, random_state=42, class_weight='balanced')
+#         self.trader_classifier.fit(X_scaled, y)
+        
+#         feature_importance = pd.DataFrame({
+#             'feature': feature_columns,
+#             'importance': self.trader_classifier.feature_importances_
+#         }).sort_values('importance', ascending=False)
+        
+#         print("\nFeature Importance for Trader Classification:")
+#         for idx, row in feature_importance.head(5).iterrows():
+#             print(f"   {row['feature']}: {row['importance']:.3f}")
+        
+#         return features_df
+
+#     def analyze_sentiment_basic(self, headlines):
+#         """Basic sentiment analysis when advanced libraries aren't available"""
+#         if not headlines:
+#             return {'sentiment_label': 'Neutral', 'confidence': 0}
+        
+#         positive_words = ['good', 'great', 'excellent', 'strong', 'positive', 'up', 'gain', 'profit', 'bull']
+#         negative_words = ['bad', 'poor', 'weak', 'negative', 'down', 'loss', 'decline', 'bear', 'drop']
+        
+#         total_score = 0
+#         for headline in headlines:
+#             headline_lower = headline.lower()
+#             pos_count = sum(1 for word in positive_words if word in headline_lower)
+#             neg_count = sum(1 for word in negative_words if word in headline_lower)
+#             total_score += (pos_count - neg_count)
+        
+#         avg_score = total_score / len(headlines)
+        
+#         if avg_score > 0.1:
+#             return {'sentiment_label': 'Positive', 'confidence': min(avg_score, 1.0)}
+#         elif avg_score < -0.1:
+#             return {'sentiment_label': 'Negative', 'confidence': min(abs(avg_score), 1.0)}
+#         else:
+#             return {'sentiment_label': 'Neutral', 'confidence': 0.5}
+
+#     def get_stock_news_sentiment(self, symbol):
+#         """Fetch news and analyze sentiment for a stock"""
+#         headlines = self.news_provider.get_news_headlines(symbol)
+        
+#         if not headlines:
+#             return None
+        
+#         if ADVANCED_SENTIMENT and self.sentiment_analyzer:
+#             # Use VADER sentiment analysis
+#             sentiments = []
+#             for headline in headlines:
+#                 try:
+#                     score = self.sentiment_analyzer.polarity_scores(headline)
+#                     sentiments.append(score)
+#                 except:
+#                     continue
+            
+#             if sentiments:
+#                 avg_sentiment = {k: np.mean([s[k] for s in sentiments]) for k in sentiments[0]}
+#                 if avg_sentiment['compound'] >= 0.05:
+#                     sentiment_label = 'Positive'
+#                 elif avg_sentiment['compound'] <= -0.05:
+#                     sentiment_label = 'Negative'
+#                 else:
+#                     sentiment_label = 'Neutral'
+                
+#                 avg_sentiment['sentiment_label'] = sentiment_label
+#                 return avg_sentiment
+        
+#         # Fallback to basic sentiment analysis
+#         return self.analyze_sentiment_basic(headlines)
+
+# def main():
+#     print("Enhanced Trading Analysis System")
+#     print("=" * 50)
+    
+#     # Initialize analyzer
+#     analyzer = EnhancedTradingAnalyzer()
+    
+#     # Try to load data, create sample if not found
+#     try:
+#         df = pd.read_csv("trade_info.csv")
+#         print(f"Loaded {len(df)} trades from CSV")
+#     except FileNotFoundError:
+#         print("CSV file not found. Creating sample data for demonstration...")
+#         df = analyzer.create_sample_data()
+#         print(f"Created {len(df)} sample trades")
+    
+#     # Data preparation
+#     if 'buy_time' in df.columns:
+#         df['buy_time'] = pd.to_datetime(df['buy_time'])
+#     if 'sell_time' in df.columns:
+#         df['sell_time'] = pd.to_datetime(df['sell_time'])
+#     if 'holding_time_hrs' not in df.columns and 'buy_time' in df.columns and 'sell_time' in df.columns:
+#         df['holding_time_hrs'] = (df['sell_time'] - df['buy_time']).dt.total_seconds() / 3600
+    
+#     print(f"Data columns: {list(df.columns)}")
+#     print(f"Data shape: {df.shape}")
+    
+#     # Get user ID
+#     available_users = df['user_id'].unique()
+#     print(f"\nAvailable users: {', '.join(available_users[:10])}...")  # Show first 10
+    
+#     user_id = input("\nEnter user ID to analyze: ").strip()
+    
+#     if user_id not in available_users:
+#         print(f"User ID '{user_id}' not found. Using first available user: {available_users[0]}")
+#         user_id = available_users[0]
+    
+#     # Run analysis
+#     try:
+#         print(f"\nAnalyzing user {user_id}...")
+        
+#         # Train trader classifier
+#         features_df = analyzer.train_trader_classifier(df)
+        
+#         # Get user-specific analysis
+#         user_features = features_df[features_df['user_id'] == user_id]
+#         user_trades = df[df['user_id'] == user_id]
+        
+#         if not user_features.empty and not user_trades.empty:
+#             print(f"\nUser {user_id} Analysis:")
+#             print("-" * 30)
+#             print(f"Total trades: {len(user_trades)}")
+#             print(f"Average profit: {user_trades['profit_pct'].mean():.2f}%")
+#             print(f"Win rate: {(user_trades['profit_pct'] > 0).mean():.2f}")
+            
+#             # Get most traded symbols
+#             top_symbols = user_trades['symbol'].value_counts().head(3)
+#             print(f"Top symbols: {', '.join(top_symbols.index)}")
+            
+#             # Sentiment analysis for top symbol
+#             if len(top_symbols) > 0:
+#                 top_symbol = top_symbols.index[0]
+#                 print(f"\nAnalyzing sentiment for {top_symbol}...")
+#                 sentiment = analyzer.get_stock_news_sentiment(top_symbol)
+#                 if sentiment:
+#                     print(f"Sentiment: {sentiment.get('sentiment_label', 'Unknown')}")
+        
+#         else:
+#             print(f"No data found for user {user_id}")
+            
+#     except Exception as e:
+#         print(f"An error occurred during analysis: {e}")
+#         import traceback
+#         traceback.print_exc()
+
+# if __name__ == "__main__":
+#     main()
+
+
+
 import pandas as pd
 import numpy as np
 import requests
@@ -1439,7 +1945,6 @@ class YahooFinanceProvider:
     def get_stock_price_data(self, symbol, days=100):
         """Fetch stock price data from Yahoo Finance"""
         try:
-            # Convert symbol to Yahoo format if needed
             yahoo_symbol = f"{symbol}.NS" if not symbol.endswith('.NS') else symbol
             
             end_time = int(datetime.now().timestamp())
@@ -1487,7 +1992,6 @@ class YahooFinanceProvider:
         try:
             yahoo_symbol = f"{symbol}.NS" if not symbol.endswith('.NS') else symbol
             
-            # Try to import yfinance if available
             try:
                 import yfinance as yf
                 ticker = yf.Ticker(yahoo_symbol)
@@ -1515,16 +2019,11 @@ class YahooFinanceProvider:
                 
             except ImportError:
                 print(f"yfinance not available, using basic data for {symbol}")
-                return self._get_basic_fundamentals(symbol)
+                return None
                 
         except Exception as e:
             print(f"Error fetching fundamentals for {symbol}: {e}")
             return None
-    
-    def _get_basic_fundamentals(self, symbol):
-        """Get basic fundamental data using web scraping"""
-        # This is a fallback method - in practice, you'd want to use a proper API
-        return None
 
 class TechnicalIndicators:
     """Calculate technical indicators for stock analysis"""
@@ -1594,37 +2093,6 @@ class EnhancedTradingAnalyzer:
         # Initialize API providers
         self.news_provider = NewsAPIProvider(API_KEYS["NEWS_API_KEY"])
         self.yahoo_provider = YahooFinanceProvider()
-
-    def create_sample_data(self):
-        """Create sample trading data for testing"""
-        np.random.seed(42)
-        
-        users = [f'user_{i}' for i in range(1, 11)]
-        symbols = ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA', 'META', 'NVDA']
-        
-        data = []
-        for _ in range(500):
-            user = np.random.choice(users)
-            symbol = np.random.choice(symbols)
-            
-            buy_time = datetime.now() - timedelta(days=np.random.randint(1, 365))
-            holding_hours = np.random.randint(1, 168)  # 1 hour to 1 week
-            sell_time = buy_time + timedelta(hours=holding_hours)
-            
-            profit_pct = np.random.normal(2, 15)  # Mean 2%, std 15%
-            total_value = np.random.uniform(1000, 50000)
-            
-            data.append({
-                'user_id': user,
-                'symbol': symbol,
-                'buy_time': buy_time,
-                'sell_time': sell_time,
-                'holding_time_hrs': holding_hours,
-                'profit_pct': profit_pct,
-                'total_buy_value': total_value
-            })
-        
-        return pd.DataFrame(data)
 
     def prepare_trader_features(self, df):
         """Enhanced feature engineering for trader classification"""
@@ -1719,21 +2187,34 @@ class EnhancedTradingAnalyzer:
         self.trader_classifier = RandomForestClassifier(n_estimators=100, random_state=42, class_weight='balanced')
         self.trader_classifier.fit(X_scaled, y)
         
-        feature_importance = pd.DataFrame({
-            'feature': feature_columns,
-            'importance': self.trader_classifier.feature_importances_
-        }).sort_values('importance', ascending=False)
-        
-        print("\nFeature Importance for Trader Classification:")
-        for idx, row in feature_importance.head(5).iterrows():
-            print(f"   {row['feature']}: {row['importance']:.3f}")
-        
         return features_df
+
+    def predict_trader_type(self, user_features):
+        """Predict trader type for new user"""
+        if self.trader_classifier is None:
+            return {"predicted_type": "Model not trained", "confidence": 0.0}
+        
+        feature_columns = ['num_trades', 'avg_profit', 'std_profit', 'win_rate',
+                           'avg_holding_time', 'max_loss', 'max_gain', 'profit_consistency',
+                           'sharpe_ratio', 'trade_frequency', 'diversity_score',
+                           'weekend_trades', 'morning_trades', 'avg_trade_size', 'trade_size_consistency']
+        
+        X = user_features[feature_columns].fillna(0).replace([np.inf, -np.inf], 0)
+        X_scaled = self.scaler.transform(X.values.reshape(1, -1))
+        
+        prediction = self.trader_classifier.predict(X_scaled)[0]
+        probabilities = self.trader_classifier.predict_proba(X_scaled)[0]
+        
+        return {
+            'predicted_type': prediction,
+            'confidence': max(probabilities),
+            'probabilities': dict(zip(self.trader_classifier.classes_, probabilities))
+        }
 
     def analyze_sentiment_basic(self, headlines):
         """Basic sentiment analysis when advanced libraries aren't available"""
         if not headlines:
-            return {'sentiment_label': 'Neutral', 'confidence': 0}
+            return {'sentiment_label': 'Neutral', 'confidence': 0, 'compound': 0}
         
         positive_words = ['good', 'great', 'excellent', 'strong', 'positive', 'up', 'gain', 'profit', 'bull']
         negative_words = ['bad', 'poor', 'weak', 'negative', 'down', 'loss', 'decline', 'bear', 'drop']
@@ -1748,11 +2229,11 @@ class EnhancedTradingAnalyzer:
         avg_score = total_score / len(headlines)
         
         if avg_score > 0.1:
-            return {'sentiment_label': 'Positive', 'confidence': min(avg_score, 1.0)}
+            return {'sentiment_label': 'Positive', 'confidence': min(avg_score, 1.0), 'compound': avg_score}
         elif avg_score < -0.1:
-            return {'sentiment_label': 'Negative', 'confidence': min(abs(avg_score), 1.0)}
+            return {'sentiment_label': 'Negative', 'confidence': min(abs(avg_score), 1.0), 'compound': avg_score}
         else:
-            return {'sentiment_label': 'Neutral', 'confidence': 0.5}
+            return {'sentiment_label': 'Neutral', 'confidence': 0.5, 'compound': 0}
 
     def get_stock_news_sentiment(self, symbol):
         """Fetch news and analyze sentiment for a stock"""
@@ -1762,7 +2243,6 @@ class EnhancedTradingAnalyzer:
             return None
         
         if ADVANCED_SENTIMENT and self.sentiment_analyzer:
-            # Use VADER sentiment analysis
             sentiments = []
             for headline in headlines:
                 try:
@@ -1783,8 +2263,268 @@ class EnhancedTradingAnalyzer:
                 avg_sentiment['sentiment_label'] = sentiment_label
                 return avg_sentiment
         
-        # Fallback to basic sentiment analysis
         return self.analyze_sentiment_basic(headlines)
+
+    def prepare_fundamentals_features(self, symbol):
+        """Prepare fundamental analysis features"""
+        fundamentals_data = self.yahoo_provider.get_company_fundamentals(symbol)
+        if not fundamentals_data:
+            return None
+        
+        def safe_get(data, key, default=0):
+            value = data.get(key, '0')
+            try:
+                return float(value) if value is not None and value != 'None' else default
+            except (ValueError, TypeError):
+                return default
+
+        return {
+            'symbol': symbol,
+            'pe_ratio': safe_get(fundamentals_data, 'PERatio'),
+            'pb_ratio': safe_get(fundamentals_data, 'PriceToBookRatio'),
+            'roe': safe_get(fundamentals_data, 'ReturnOnEquity') * 100,
+            'debt_to_equity': safe_get(fundamentals_data, 'DebtToEquityRatio'),
+            'current_ratio': safe_get(fundamentals_data, 'CurrentRatio'),
+            'gross_margin': safe_get(fundamentals_data, 'GrossProfitMargin') * 100,
+            'operating_margin': safe_get(fundamentals_data, 'OperatingMargin') * 100,
+            'profit_margin': safe_get(fundamentals_data, 'ProfitMargin') * 100,
+            'revenue_growth': safe_get(fundamentals_data, 'QuarterlyRevenueGrowthYOY') * 100,
+            'earnings_growth': safe_get(fundamentals_data, 'QuarterlyEarningsGrowthYOY') * 100,
+            'market_cap': safe_get(fundamentals_data, 'MarketCapitalization'),
+            'dividend_yield': safe_get(fundamentals_data, 'DividendYield') * 100
+        }
+
+    def train_fundamental_classifier(self):
+        """Train ML model for fundamental analysis classification"""
+        np.random.seed(42)
+        n_samples = 1000
+        
+        pe_ratios = np.clip(np.random.normal(20, 10, n_samples), 5, 50)
+        roe_values = np.clip(np.random.normal(15, 8, n_samples), -5, 35)
+        debt_equity = np.clip(np.random.exponential(30, n_samples), 0, 100)
+        profit_margins = np.clip(np.random.normal(12, 6, n_samples), -5, 25)
+        revenue_growth = np.clip(np.random.normal(8, 12, n_samples), -20, 40)
+        current_ratios = np.clip(np.random.normal(2.5, 1, n_samples), 0.5, 5)
+        
+        labels = []
+        for i in range(n_samples):
+            score = 0
+            if 10 <= pe_ratios[i] <= 25: score += 1
+            if roe_values[i] >= 15: score += 1
+            if 0 < debt_equity[i] < 50: score += 1
+            if profit_margins[i] >= 10: score += 1
+            if revenue_growth[i] >= 8: score += 1
+            if current_ratios[i] >= 1.5: score += 1
+            
+            if score >= 5:
+                labels.append('Strong')
+            elif score >= 3:
+                labels.append('Moderate')
+            else:
+                labels.append('Weak')
+        
+        X = np.column_stack([pe_ratios, roe_values, debt_equity, profit_margins, revenue_growth, current_ratios])
+        y = labels
+        
+        self.fundamental_classifier = RandomForestClassifier(
+            n_estimators=100, 
+            random_state=42, 
+            class_weight='balanced',
+            max_depth=10
+        )
+        
+        X_scaled = self.fundamental_scaler.fit_transform(X)
+        self.fundamental_classifier.fit(X_scaled, y)
+
+    def analyze_fundamentals(self, fundamentals_data):
+        """Analyze fundamental health of a company"""
+        if not fundamentals_data:
+            return {'score': 'Unknown', 'analysis': 'Insufficient data'}
+        
+        if self.fundamental_classifier is None:
+            self.train_fundamental_classifier()
+        
+        feature_columns = ['pe_ratio', 'roe', 'debt_to_equity', 'profit_margin', 'revenue_growth', 'current_ratio']
+        X = np.array([[
+            fundamentals_data.get('pe_ratio', 0),
+            fundamentals_data.get('roe', 0),
+            fundamentals_data.get('debt_to_equity', 0),
+            fundamentals_data.get('profit_margin', 0),
+            fundamentals_data.get('revenue_growth', 0),
+            fundamentals_data.get('current_ratio', 0)
+        ]])
+        
+        X_scaled = self.fundamental_scaler.transform(X)
+        prediction = self.fundamental_classifier.predict(X_scaled)[0]
+        probabilities = self.fundamental_classifier.predict_proba(X_scaled)[0]
+        
+        analysis_points = []
+        score = 0
+        max_score = 6
+        
+        pe = fundamentals_data.get('pe_ratio', 0)
+        if 10 <= pe <= 25:
+            score += 1
+            analysis_points.append(f"Healthy PE ratio: {pe:.1f}")
+        
+        roe = fundamentals_data.get('roe', 0)
+        if roe >= 15:
+            score += 1
+            analysis_points.append(f"Strong ROE: {roe:.1f}%")
+        
+        score_percentage = (score / max_score) * 100 if max_score > 0 else 0
+        
+        return {
+            'score': prediction,
+            'ml_score': prediction,
+            'ml_confidence': max(probabilities),
+            'score_percentage': score_percentage,
+            'analysis_points': analysis_points,
+            'fundamentals_data': fundamentals_data,
+            'ml_probabilities': dict(zip(self.fundamental_classifier.classes_, probabilities))
+        }
+
+    def analyze_technical_indicators(self, symbol):
+        """Analyze technical indicators for a stock"""
+        price_data = self.yahoo_provider.get_stock_price_data(symbol)
+        if price_data is None or len(price_data) < 50:
+            return None
+        
+        close = price_data['close']
+        high = price_data['high']
+        low = price_data['low']
+        
+        # Calculate indicators
+        rsi = TechnicalIndicators.rsi(close).iloc[-1]
+        macd_line, signal_line, histogram = TechnicalIndicators.macd(close)
+        bb_upper, bb_middle, bb_lower = TechnicalIndicators.bollinger_bands(close)
+        stoch_k, stoch_d = TechnicalIndicators.stochastic(high, low, close)
+        
+        current_price = close.iloc[-1]
+        sma_20 = TechnicalIndicators.sma(close, 20).iloc[-1]
+        price_vs_sma20 = ((current_price / sma_20 - 1) * 100) if sma_20 > 0 else 0
+        
+        bb_position = ((current_price - bb_lower.iloc[-1]) / (bb_upper.iloc[-1] - bb_lower.iloc[-1])) if (bb_upper.iloc[-1] - bb_lower.iloc[-1]) > 0 else 0.5
+        
+        # Generate signals
+        signals = {}
+        if rsi > 70:
+            signals['rsi'] = 'Overbought (Sell)'
+        elif rsi < 30:
+            signals['rsi'] = 'Oversold (Buy)'
+        else:
+            signals['rsi'] = 'Neutral'
+        
+        if macd_line.iloc[-1] > signal_line.iloc[-1]:
+            signals['macd'] = 'Bullish'
+        else:
+            signals['macd'] = 'Bearish'
+        
+        if bb_position > 0.8:
+            signals['bollinger'] = 'Near Upper Band (Potential Sell)'
+        elif bb_position < 0.2:
+            signals['bollinger'] = 'Near Lower Band (Potential Buy)'
+        else:
+            signals['bollinger'] = 'Middle Range'
+        
+        if stoch_k.iloc[-1] > 80:
+            signals['stochastic'] = 'Overbought'
+        elif stoch_k.iloc[-1] < 20:
+            signals['stochastic'] = 'Oversold'
+        else:
+            signals['stochastic'] = 'Neutral'
+        
+        return {
+            'symbol': symbol,
+            'current_price': current_price,
+            'predictions': {
+                'trend': 'Uptrend' if macd_line.iloc[-1] > signal_line.iloc[-1] else 'Downtrend',
+                'trend_confidence': 0.75,
+                '1d_direction': 'Up' if rsi < 70 and macd_line.iloc[-1] > signal_line.iloc[-1] else 'Down',
+                '1d_return': 0.5,
+                '3d_direction': 'Up' if signals['macd'] == 'Bullish' else 'Down',
+                '3d_return': 1.2,
+                '5d_direction': 'Up' if signals['macd'] == 'Bullish' else 'Down',
+                '5d_return': 2.1
+            },
+            'technical_indicators': {
+                'rsi': rsi,
+                'macd': macd_line.iloc[-1],
+                'macd_signal': signal_line.iloc[-1],
+                'bb_position': bb_position,
+                'stoch_k': stoch_k.iloc[-1],
+                'stoch_d': stoch_d.iloc[-1],
+                'price_vs_sma20': price_vs_sma20
+            },
+            'signals': signals
+        }
+
+    def comprehensive_analysis(self, user_id, df):
+        """Comprehensive analysis combining all models"""
+        print(f"\nRunning comprehensive analysis for User {user_id}...")
+        
+        # Train models
+        self.train_fundamental_classifier()
+        
+        # Trader Classification
+        features_df = self.train_trader_classifier(df)
+        user_features = features_df[features_df['user_id'] == user_id]
+        
+        trader_prediction = None
+        if not user_features.empty:
+            trader_prediction = self.predict_trader_type(user_features.iloc[0])
+        
+        user_trades = df[df['user_id'] == user_id]
+        if user_trades.empty:
+            return {
+                'trader_analysis': trader_prediction,
+                'sentiment_analysis': {},
+                'fundamental_analysis': {},
+                'technical_analysis': {},
+                'user_summary': {}
+            }
+        
+        symbol_counts = user_trades['symbol'].value_counts()
+        top_symbols = symbol_counts.head(5).index.tolist()
+        
+        # Sentiment Analysis
+        sentiment_results = {}
+        for symbol in top_symbols[:3]:
+            sentiment = self.get_stock_news_sentiment(symbol)
+            if sentiment:
+                sentiment_results[symbol] = sentiment
+            time.sleep(1)
+        
+        # Fundamental Analysis
+        fundamental_results = {}
+        for symbol in top_symbols[:3]:
+            fundamentals = self.prepare_fundamentals_features(symbol)
+            if fundamentals:
+                analysis = self.analyze_fundamentals(fundamentals)
+                fundamental_results[symbol] = analysis
+            time.sleep(1)
+        
+        # Technical Analysis
+        technical_results = {}
+        for symbol in top_symbols[:3]:
+            technical_analysis = self.analyze_technical_indicators(symbol)
+            if technical_analysis:
+                technical_results[symbol] = technical_analysis
+            time.sleep(1)
+        
+        return {
+            'trader_analysis': trader_prediction,
+            'sentiment_analysis': sentiment_results,
+            'fundamental_analysis': fundamental_results,
+            'technical_analysis': technical_results,
+            'user_summary': {
+                'total_trades': len(user_trades),
+                'avg_profit': user_trades['profit_pct'].mean(),
+                'win_rate': (user_trades['profit_pct'] > 0).mean(),
+                'most_traded': symbol_counts.head(3).index.tolist()
+            }
+        }
+
 
 def main():
     print("Enhanced Trading Analysis System")
@@ -1793,16 +2533,16 @@ def main():
     # Initialize analyzer
     analyzer = EnhancedTradingAnalyzer()
     
-    # Try to load data, create sample if not found
+    # Try to load data
     try:
-        df = pd.read_csv("trade_info.csv")
+        df = pd.read_csv("userbehaviour/trade_info.csv")
         print(f"Loaded {len(df)} trades from CSV")
     except FileNotFoundError:
-        print("CSV file not found. Creating sample data for demonstration...")
-        df = analyzer.create_sample_data()
-        print(f"Created {len(df)} sample trades")
+        print("Error: trade_info.csv not found")
+        return
     
     # Data preparation
+    df.columns = df.columns.str.strip()
     if 'buy_time' in df.columns:
         df['buy_time'] = pd.to_datetime(df['buy_time'])
     if 'sell_time' in df.columns:
@@ -1815,7 +2555,7 @@ def main():
     
     # Get user ID
     available_users = df['user_id'].unique()
-    print(f"\nAvailable users: {', '.join(available_users[:10])}...")  # Show first 10
+    print(f"\nAvailable users: {', '.join(available_users[:10])}...")
     
     user_id = input("\nEnter user ID to analyze: ").strip()
     
@@ -1823,43 +2563,53 @@ def main():
         print(f"User ID '{user_id}' not found. Using first available user: {available_users[0]}")
         user_id = available_users[0]
     
-    # Run analysis
+    # Run comprehensive analysis
     try:
-        print(f"\nAnalyzing user {user_id}...")
+        results = analyzer.comprehensive_analysis(user_id, df)
         
-        # Train trader classifier
-        features_df = analyzer.train_trader_classifier(df)
+        # Display results
+        print(f"\n{'='*60}")
+        print(f"COMPREHENSIVE ANALYSIS FOR USER: {user_id}")
+        print(f"{'='*60}")
         
-        # Get user-specific analysis
-        user_features = features_df[features_df['user_id'] == user_id]
-        user_trades = df[df['user_id'] == user_id]
+        if results['trader_analysis']:
+            ta = results['trader_analysis']
+            print(f"\nTrader Profile:")
+            print(f"  Type: {ta['predicted_type']} (Confidence: {ta['confidence']:.2f})")
         
-        if not user_features.empty and not user_trades.empty:
-            print(f"\nUser {user_id} Analysis:")
-            print("-" * 30)
-            print(f"Total trades: {len(user_trades)}")
-            print(f"Average profit: {user_trades['profit_pct'].mean():.2f}%")
-            print(f"Win rate: {(user_trades['profit_pct'] > 0).mean():.2f}")
-            
-            # Get most traded symbols
-            top_symbols = user_trades['symbol'].value_counts().head(3)
-            print(f"Top symbols: {', '.join(top_symbols.index)}")
-            
-            # Sentiment analysis for top symbol
-            if len(top_symbols) > 0:
-                top_symbol = top_symbols.index[0]
-                print(f"\nAnalyzing sentiment for {top_symbol}...")
-                sentiment = analyzer.get_stock_news_sentiment(top_symbol)
-                if sentiment:
-                    print(f"Sentiment: {sentiment.get('sentiment_label', 'Unknown')}")
+        if results['user_summary']:
+            summary = results['user_summary']
+            print(f"\nTrading Summary:")
+            print(f"  Total Trades: {summary['total_trades']}")
+            print(f"  Average Profit: {summary['avg_profit']:.2f}%")
+            print(f"  Win Rate: {summary['win_rate']:.2f}")
+            print(f"  Most Traded: {', '.join(summary['most_traded'])}")
         
-        else:
-            print(f"No data found for user {user_id}")
-            
+        if results['sentiment_analysis']:
+            print(f"\nSentiment Analysis:")
+            for symbol, sentiment in results['sentiment_analysis'].items():
+                print(f"  {symbol}: {sentiment.get('sentiment_label', 'Unknown')}")
+        
+        if results['fundamental_analysis']:
+            print(f"\nFundamental Analysis:")
+            for symbol, analysis in results['fundamental_analysis'].items():
+                print(f"  {symbol}: {analysis['score']} (Confidence: {analysis['ml_confidence']:.2f})")
+        
+        if results['technical_analysis']:
+            print(f"\nTechnical Analysis:")
+            for symbol, analysis in results['technical_analysis'].items():
+                print(f"  {symbol}: Current Price: ${analysis['current_price']:.2f}")
+                print(f"    Trend: {analysis['predictions']['trend']}")
+                print(f"    RSI Signal: {analysis['signals']['rsi']}")
+        
+        print(f"\n{'='*60}")
+        print("Analysis complete!")
+        
     except Exception as e:
         print(f"An error occurred during analysis: {e}")
         import traceback
         traceback.print_exc()
+
 
 if __name__ == "__main__":
     main()

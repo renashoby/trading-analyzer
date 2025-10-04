@@ -218,6 +218,76 @@ def analyze_sentiment(symbol):
         logger.error(f"Error in analyze_sentiment: {e}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/analyze/fundamentals/<symbol>', methods=['GET'])
+def analyze_fundamentals(symbol):
+    """Analyze fundamentals for a specific stock symbol"""
+    try:
+        if not ML_AVAILABLE or analyzer is None:
+            return jsonify({
+                'symbol': symbol.upper(),
+                'fundamentals': None,
+                'message': 'Fundamental analysis requires ML features',
+                'ml_features_available': False
+            })
+        
+        # Get fundamental data
+        fundamentals = analyzer.prepare_fundamentals_features(symbol.upper())
+        
+        if fundamentals is None:
+            return jsonify({
+                'symbol': symbol.upper(),
+                'fundamentals': None,
+                'message': 'No fundamental data found for this symbol'
+            })
+        
+        # Analyze fundamentals
+        analysis = analyzer.analyze_fundamentals(fundamentals)
+        
+        return jsonify({
+            'symbol': symbol.upper(),
+            'fundamentals': fundamentals,
+            'analysis': analysis,
+            'analysis_timestamp': datetime.now().isoformat()
+        })
+    
+    except Exception as e:
+        logger.error(f"Error in analyze_fundamentals: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/analyze/technical/<symbol>', methods=['GET'])
+def analyze_technical(symbol):
+    """Analyze technical indicators for a specific stock symbol"""
+    try:
+        if not ML_AVAILABLE or analyzer is None:
+            return jsonify({
+                'symbol': symbol.upper(),
+                'technical': None,
+                'message': 'Technical analysis requires ML features',
+                'ml_features_available': False
+            })
+        
+        # Get technical analysis
+        technical = analyzer.analyze_technical_indicators(symbol.upper())
+        
+        if technical is None:
+            return jsonify({
+                'symbol': symbol.upper(),
+                'technical': None,
+                'message': 'No technical data found for this symbol (insufficient price history)'
+            })
+        
+        return jsonify({
+            'symbol': symbol.upper(),
+            'technical': technical,
+            'analysis_timestamp': datetime.now().isoformat()
+        })
+    
+    except Exception as e:
+        logger.error(f"Error in analyze_technical: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/api/analyze/comprehensive/<user_id>', methods=['GET'])
 def comprehensive_analysis(user_id):
     """Run comprehensive analysis for a user"""
